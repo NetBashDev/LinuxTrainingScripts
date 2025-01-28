@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# Check if the script is run as root
+if [ "$EUID" -ne 0 ]; then
+    echo "Please run as root or use sudo."
+    exit 1
+fi
+
+# Function to display usage
+usage() {
+    echo "Usage: $0 <logfile>"
+    echo "Example: $0 permissions_log.txt"
+    exit 1
+}
+
+# Check for the correct number of arguments
+if [ "$#" -ne 1 ]; then
+    usage
+fi
+
+# Assign the log file argument
+LOGFILE=$1
+
+# Prompt for user input
+read -p "Enter the username: " USERNAME
+read -p "Enter the group name: " GROUPNAME
+read -p "Enter the directory path: " DIRECTORY
+
+# Start logging
+{
+    echo "=== Permission Check Report ==="
+    echo "Timestamp: $(date)"
+    echo "Username: $USERNAME"
+    echo "Group Name: $GROUPNAME"
+    echo "Directory: $DIRECTORY"
+    echo ""
+
+    # Check if user exists
+    if id "$USERNAME" &>/dev/null; then
+        echo "User $USERNAME exists."
+    else
+        echo "User $USERNAME does not exist."
+    fi
+
+    # Check if group exists
+    if getent group "$GROUPNAME" &>/dev/null; then
+        echo "Group $GROUPNAME exists."
+    else
+        echo "Group $GROUPNAME does not exist."
+    fi
+
+    # Check if directory exists
+    if [ -d "$DIRECTORY" ]; then
+        echo "Directory $DIRECTORY exists."
+        echo "Permissions for $DIRECTORY: $(ls -ld "$DIRECTORY")"
+        echo "Ownership for $DIRECTORY: $(ls -ld "$DIRECTORY" | awk '{print $3":"$4}')"
+    else
+        echo "Directory $DIRECTORY does not exist."
+    fi
+
+    # Check user permissions on the directory
+    if [ -d "$DIRECTORY" ]; then
+        if [ -r "$DIRECTORY" ]; then
+            echo "User $USERNAME has read permission on $DIRECTORY."
+        else
+            echo "User $USERNAME does NOT have read permission on $DIRECTORY."
+        fi
+
+        if [ -w "$DIRECTORY" ]; then
+            echo "User $USERNAME has write permission on $DIRECTORY."
+        else
+            echo "User $USERNAME does NOT have write permission on $DIRECTORY."
+        fi
+
+        if [ -x "$DIRECTORY" ]; then
+            echo "User $USERNAME has execute permission on $DIRECTORY."
+        else
+            echo "User $USERNAME does NOT have execute permission on $DIRECTORY."
+        fi
+    fi
+
+    # Check group permissions on the directory
+    if [ -d "$DIRECTORY" ]; then
+        if [ -r "$DIRECTORY" ] && [ "$(stat -c '%G' "$DIRECTORY")" == "$GROUPNAME" ]; then
+            echo "Group $GROUPNAME has read permission on $DIRECTORY."
+        else
+            echo "Group $GROUPNAME does NOT have read permission on $DIRECTORY."
+        fi
+
+        if [ -w "$DIRECTORY" ] && [ "$(stat -c '%G' "$DIRECTORY")" == "$GROUPNAME" ]; then
+            echo "Group $GROUPNAME has write permission on $DIRECTORY."
+        else
+            echo "Group $GROUPNAME does NOT have write permission on $DIRECTORY."
+        fi
+
+        if [ -x "$DIRECTORY" ] && [ "$(stat -c '%G' "$DIRECTORY")" == "$GROUPNAME" ]; then
+            echo "Group $GROUPNAME has execute permission on $DIRECTORY."
+        else
+            echo "Group $GROUPNAME does NOT have execute permission on $DIRECTORY."
+        fi
+    fi
+
+    echo "=== End of Report ==="
+} >> "$LOGFILE"
+
+echo "Permission check completed. Results saved to $LOGFILE."
