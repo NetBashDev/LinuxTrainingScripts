@@ -4,8 +4,7 @@
 SALIDA="Traza de permisos"
 
 # Pedir al usuario los directorios o archivos a checar
-echo "[+] Porfavor, Ingrese los directorios o archivos que desea verificar, (Seleccion multiple, separados por espacios [+]\n
->> "
+echo "[+] Porfavor, Ingrese los directorios o archivos que desea verificar, (Seleccion multiple, separados por espacios [+]"
 read -r INPUT
 
 # Usar directorios predeterminados si no se ingresa nada
