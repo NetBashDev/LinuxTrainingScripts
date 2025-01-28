@@ -11,30 +11,37 @@ read -p "Ingrese el nombre del nuevo usuario: " USUARIO
 
 # Verificar si el usuario ya existe
 if id "$USUARIO" &>/dev/null; then
-    echo "El usuario $USUARIO ya existe. Saliendo..."
+    echo "El usuario '$USUARIO' ya existe. Saliendo..."
     exit 1
 fi
 
-# Pedir al usuario información adicional
+# Pedir información adicional
 read -p "Ingrese el shell predeterminado (por defecto: /bin/bash): " SHELL
 SHELL=${SHELL:-/bin/bash}
 
-read -p "Ingrese el nombre del grupo primario (por defecto: usuarios): " GRUPO
-GRUPO=${GRUPO:-usuarios}
+read -p "Ingrese el nombre del grupo primario (por defecto: users): " GRUPO
+GRUPO=${GRUPO:-users}
 
-# Crear el usuario con las opciones especificadas
-sudo useradd -m -s "$SHELL" -g "$GRUPO" "$USUARIO"
+# Crear el grupo si no existe
+if ! grep -q "^$GRUPO:" /etc/group; then
+    echo "El grupo '$GRUPO' no existe. Creándolo..."
+    groupadd "$GRUPO"
+fi
 
-# Configurar una contraseña inicial
-echo "Estableciendo una contraseña inicial para $USUARIO..."
-sudo passwd "$USUARIO"
+# Crear el usuario con su directorio home
+useradd -m -s "$SHELL" -g "$GRUPO" "$USUARIO"
 
-# Forzar el cambio de contraseña al primer inicio
-sudo chage -d 0 "$USUARIO"
+# Generar contraseña aleatoria
+PASSWORD=$(openssl rand -base64 12)
+echo "$USUARIO:$PASSWORD" | chpasswd
 
-echo "Usuario $USUARIO creado exitosamente con las siguientes configuraciones:"
-echo "  - Directorio home: /home/$USUARIO"
+# Forzar cambio de contraseña al primer inicio
+chage -d 0 "$USUARIO"
+
+# Mostrar resumen
+echo "Usuario '$USUARIO' creado exitosamente."
+echo "  - Contraseña temporal: $PASSWORD"
 echo "  - Shell: $SHELL"
-echo "  - Grupo: $GRUPO"
-echo "  - Cambio de contraseña al primer inicio: Activado"
+echo "  - Grupo primario: $GRUPO"
+echo "El usuario debe cambiar su contraseña al primer inicio de sesión."
 
