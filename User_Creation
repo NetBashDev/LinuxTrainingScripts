@@ -45,3 +45,8 @@ echo "  - Shell: $SHELL"
 echo "  - Grupo primario: $GRUPO"
 echo "El usuario debe cambiar su contraseña al primer inicio de sesión."
 
+# Mostrar  las ultimas 5 lineas del archivo 
+echo "Lista de los ultimos 5 usuarios"
+tail -n 5 /etc/passwd
+
+
