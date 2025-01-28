@@ -52,21 +52,25 @@ echo "===================================================" >> "$SALIDA"
 
 # Recolectar información de permisos
 for RUTA in "${DIRECTORIOS[@]}"; do
+    echo -e "\n${COLOR_VERDE}[+] Verificando: $RUTA${COLOR_RESET}"
+    echo "===================================================" >> "$SALIDA"
+    echo "Path del directorio/archivo: $RUTA" >> "$SALIDA"
+    echo "---------------------------------------------------" >> "$SALIDA"
+    
     if [ -e "$RUTA" ]; then
-        echo -e "${COLOR_VERDE}[+] Verificando: $RUTA${COLOR_RESET}"
-        echo "Path del directorio/archivo: $RUTA" >> "$SALIDA"
         echo "Permisos detallados:" >> "$SALIDA"
         ls -ld "$RUTA" >> "$SALIDA"
+        echo "---------------------------------------------------" >> "$SALIDA"
         echo "Propietario: $(stat -c '%U' "$RUTA")" >> "$SALIDA"
         echo "Grupo: $(stat -c '%G' "$RUTA")" >> "$SALIDA"
         echo "Permisos (octal): $(stat -c '%a' "$RUTA")" >> "$SALIDA"
-        echo "" >> "$SALIDA"
+        echo "===================================================" >> "$SALIDA"
     else
         error "Path no encontrado: $RUTA"
         echo "Path no encontrado: $RUTA" >> "$SALIDA"
-        echo "" >> "$SALIDA"
+        echo "===================================================" >> "$SALIDA"
     fi
 done
 
 # Mostrar mensaje final
-exito "Reporte generado en: $SALIDA"
+echo -e "\n${COLOR_VERDE}[+] Reporte generado en: $SALIDA${COLOR_RESET}"
