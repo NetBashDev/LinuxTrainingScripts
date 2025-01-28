@@ -45,8 +45,20 @@ echo "  - Shell: $SHELL"
 echo "  - Grupo primario: $GRUPO"
 echo "El usuario debe cambiar su contraseña al primer inicio de sesión."
 
-# Mostrar  las ultimas 5 lineas del archivo 
-echo "Lista de los ultimos 5 usuarios"
+# Mostrar las últimas 5 líneas del archivo de usuarios
+echo "Últimos 5 usuarios en /etc/passwd:"
 tail -n 5 /etc/passwd
+
+# Comprobar si el usuario es parte de sudoers
+echo "Verificando si el usuario '$USUARIO' tiene privilegios sudo..."
+if groups "$USUARIO" | grep -qE "\bsudo\b|\bwheel\b"; then
+    echo "El usuario '$USUARIO' es parte de los sudoers y puede usar sudo."
+else
+    echo "El usuario '$USUARIO' NO es parte de los sudoers."
+    echo "Si deseas agregarlo, ejecuta:"
+    echo "  usermod -aG sudo $USUARIO   # Para distribuciones basadas en Debian/Ubuntu"
+    echo "  usermod -aG wheel $USUARIO  # Para distribuciones basadas en RedHat/CentOS"
+fi
+
 
 
