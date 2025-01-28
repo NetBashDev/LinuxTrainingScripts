@@ -1,0 +1,172 @@
+# Clase: Permisos en Linux y su importancia en Pipelines, Scripts y Agentes Autoalojados
+
+## Introducción
+
+Los permisos en Linux son un componente esencial para garantizar la seguridad y el correcto funcionamiento de sistemas y aplicaciones. Entender cómo configurar y gestionar permisos es crítico, especialmente cuando trabajamos con pipelines CI/CD, scripts automatizados y agentes autoalojados, donde una configuración incorrecta puede comprometer la seguridad o provocar errores en la ejecución.
+
+---
+
+## 1. Permisos en Linux: Conceptos Básicos
+
+En Linux, los permisos se definen a nivel de archivo o directorio y están divididos en tres niveles:
+
+### 1.1 Tipos de Permisos
+
+- **Lectura (r)**: Permite leer el contenido del archivo o listar el contenido de un directorio.
+- **Escritura (w)**: Permite modificar el archivo o crear/eliminar archivos dentro de un directorio.
+- **Ejecución (x)**: Permite ejecutar un archivo como un programa o entrar en un directorio.
+
+### 1.2 Categorías de Usuarios
+
+- **Propietario**: El usuario que creó el archivo o directorio.
+- **Grupo**: Un grupo de usuarios que comparte permisos sobre el archivo o directorio.
+- **Otros**: Todos los demás usuarios del sistema.
+
+### 1.3 Representación de Permisos
+
+Permisos se representan de dos maneras:
+
+1. **Modo simbólico**:
+
+   ```bash
+   -rwxr-xr--
+   ```
+
+   - El primer carácter indica el tipo ("-" para archivo, "d" para directorio).
+   - Los siguientes caracteres están divididos en grupos de tres:
+     - `rwx`: Permisos del propietario.
+     - `r-x`: Permisos del grupo.
+     - `r--`: Permisos de otros.
+
+2. **Modo numérico (octal)**:
+   Cada permiso tiene un valor numérico:
+
+   - `r` = 4
+   - `w` = 2
+   - `x` = 1
+
+   Ejemplo:
+
+   ```bash
+   chmod 755 archivo
+   ```
+
+   - 7 (propietario): r+w+x = 4+2+1
+   - 5 (grupo): r+x = 4+1
+   - 5 (otros): r+x = 4+1
+
+### 1.4 Comandos Esenciales
+
+- **ls -l**: Lista archivos y sus permisos.
+- **chmod**: Cambia permisos.
+- **chown**: Cambia el propietario.
+- **chgrp**: Cambia el grupo propietario.
+
+---
+
+## 2. Importancia de los Permisos en Pipelines
+
+Cuando se configuran pipelines de CI/CD (como Jenkins, GitLab CI, o GitHub Actions), los permisos de archivos y directorios juegan un rol crucial para garantizar la seguridad y la ejecución exitosa de tareas.
+
+### 2.1 Escenarios Comunes
+
+- **Ejecución de Scripts**: Los scripts utilizados en los pipelines deben tener permisos de ejecución (`chmod +x script.sh`).
+- **Acceso a Archivos**: Archivos sensibles, como claves SSH o variables de entorno, deben tener permisos restrictivos (`chmod 600`).
+- **Directorios Compartidos**: Asegurarse de que los directorios usados por diferentes etapas del pipeline tienen los permisos adecuados para evitar problemas de acceso.
+
+### 2.2 Buenas Prácticas
+
+- Usar usuarios dedicados para ejecutar los pipelines.
+- Asegurar que los scripts no tengan permisos excesivos.
+- Validar permisos en cada etapa para evitar accesos no deseados.
+
+---
+
+## 3. Permisos en Scripts
+
+Los scripts automatizados son una parte fundamental de las operaciones. Una configuración incorrecta de permisos puede impedir la ejecución del script o exponer información sensible.
+
+### 3.1 Configuración de Permisos
+
+1. **Permisos de Ejecución**:
+
+   - Todo script debe tener el permiso de ejecución:
+     ```bash
+     chmod +x script.sh
+     ```
+
+2. **Shebang Correcto**:
+
+   - Asegúrate de incluir la línea inicial (shebang) para especificar el intérprete:
+     ```bash
+     #!/bin/bash
+     ```
+
+3. **Permisos Restrictivos**:
+
+   - Si el script contiene información sensible:
+     ```bash
+     chmod 700 script.sh
+     ```
+
+### 3.2 Prevención de Errores
+
+- Verificar que el script se ejecuta desde el usuario correcto.
+- Usar rutas absolutas para evitar problemas de acceso.
+
+---
+
+## 4. Permisos y Agentes Autoalojados
+
+Los agentes autoalojados (por ejemplo, en Jenkins o GitLab Runner) deben configurarse con especial cuidado para evitar vulnerabilidades.
+
+### 4.1 Usuario Dedicado
+
+- Siempre configura los agentes para que se ejecuten bajo un usuario dedicado con permisos limitados. Esto minimiza el impacto en caso de un ataque.
+
+### 4.2 Archivos y Directorios
+
+- **Directorios de Trabajo**:
+  - Asegúrate de que los directorios utilizados por el agente tienen los permisos correctos:
+    ```bash
+    chmod 750 /ruta/del/directorio
+    ```
+- **Claves y Certificados**:
+  - Archivos como claves SSH deben tener permisos restrictivos:
+    ```bash
+    chmod 600 ~/.ssh/id_rsa
+    ```
+
+### 4.3 Ejecución de Tareas
+
+- Asegúrate de que los scripts que el agente ejecuta tienen permisos adecuados y no exponen información sensible.
+- Monitorea los permisos del entorno del agente para evitar configuraciones incorrectas.
+
+---
+
+## 5. Errores Comunes y Cómo Evitarlos
+
+1. **Permisos Excesivos**:
+
+   - Evita usar permisos como `chmod 777`, ya que permiten acceso total a cualquier usuario.
+
+2. **Shebang Incorrecto**:
+
+   - Asegúrate de que el shebang corresponde al intérprete correcto.
+
+3. **Permisos de Escritura en Directorios Críticos**:
+
+   - Nunca permitas escritura global en directorios críticos como `/usr/bin` o `/etc`.
+
+4. **Permisos Incorrectos en Claves Privadas**:
+
+   - Las claves privadas deben ser accesibles solo por su propietario (`chmod 600`).
+
+---
+
+## 6. Conclusión
+
+El manejo adecuado de permisos en Linux es clave para la seguridad y el correcto funcionamiento de sistemas automatizados. En el contexto de pipelines, scripts y agentes autoalojados, los permisos mal configurados pueden generar errores, vulnerabilidades y pérdida de datos. Adoptar buenas prácticas y verificar constantemente los permisos es fundamental para garantizar un entorno seguro y eficiente.
+
+
+
