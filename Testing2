@@ -16,12 +16,19 @@ function print_red {
     echo -e "\e[31m$1\e[0m"
 }
 
+# Función para imprimir una línea de separación
+function print_separator {
+    echo "------------------------------------------------------------"
+}
+
 # Pedir al usuario el nombre del nuevo usuario
 read -p "Ingrese el nombre del nuevo usuario: " USUARIO
+print_separator
 
 # Verificar si el usuario ya existe
 if id "$USUARIO" &>/dev/null; then
     print_red "El usuario '$USUARIO' ya existe. Saliendo..."
+    print_separator
     exit 1
 fi
 
@@ -31,11 +38,13 @@ SHELL=${SHELL:-/bin/bash}
 
 read -p "Ingrese el nombre del grupo primario (por defecto: users): " GRUPO
 GRUPO=${GRUPO:-users}
+print_separator
 
 # Crear el grupo si no existe
 if ! grep -q "^$GRUPO:" /etc/group; then
     print_green "El grupo '$GRUPO' no existe. Creándolo..."
     groupadd "$GRUPO"
+    print_separator
 fi
 
 # Crear el usuario con su directorio home
@@ -54,21 +63,25 @@ echo "  - Contraseña temporal: $PASSWORD"
 echo "  - Shell: $SHELL"
 echo "  - Grupo primario: $GRUPO"
 echo "El usuario debe cambiar su contraseña al primer inicio de sesión."
+print_separator
 
 # Mostrar las últimas 5 líneas del archivo de usuarios
 echo "Últimos 5 usuarios en /etc/passwd:"
 tail -n 5 /etc/passwd
+print_separator
 
 # Comprobar si el usuario es parte de sudoers
 echo "Verificando si el usuario '$USUARIO' tiene privilegios sudo..."
 if groups "$USUARIO" | grep -q "\bsudo\b"; then
     print_green "El usuario '$USUARIO' es parte de los sudoers y puede usar sudo."
+    print_separator
 else
     print_red "El usuario '$USUARIO' NO es parte de los sudoers."
     read -p "¿Desea agregar al usuario '$USUARIO' al grupo sudo? (s/n): " RESPUESTA
     if [[ "$RESPUESTA" == "s" || "$RESPUESTA" == "S" ]]; then
         usermod -aG sudo "$USUARIO"
         print_green "El usuario '$USUARIO' se agregó al grupo sudo."
+        print_separator
 
         # Verificar nuevamente si tiene privilegios sudo
         echo "Reverificando privilegios sudo..."
@@ -77,7 +90,9 @@ else
         else
             print_red "Hubo un error al agregar el usuario '$USUARIO' al grupo sudo."
         fi
+        print_separator
     else
         print_red "El usuario '$USUARIO' no se agregó al grupo sudo."
+        print_separator
     fi
 fi
