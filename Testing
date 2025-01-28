@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Archivo de salida
+SALIDA="Traza_de_permisos_$(date +%Y%m%d_%H%M%S).txt"
+
+# Colores para la salida en terminal
+COLOR_ROJO='\033[0;31m'
+COLOR_VERDE='\033[0;32m'
+COLOR_AMARILLO='\033[0;33m'
+COLOR_RESET='\033[0m'
+
+# Función para mostrar mensajes de error
+error() {
+    echo -e "${COLOR_ROJO}[!] Error: $1${COLOR_RESET}" >&2
+}
+
+# Función para mostrar mensajes de éxito
+exito() {
+    echo -e "${COLOR_VERDE}[+] $1${COLOR_RESET}"
+}
+
+# Función para mostrar advertencias
+advertencia() {
+    echo -e "${COLOR_AMARILLO}[!] Advertencia: $1${COLOR_RESET}"
+}
+
+# Pedir al usuario los directorios o archivos a checar
+echo -e "${COLOR_VERDE}[+] Por favor, ingrese los directorios o archivos que desea verificar (separados por espacios):${COLOR_RESET}"
+read -r INPUT
+
+# Usar directorios predeterminados si no se ingresa nada
+if [ -z "$INPUT" ]; then
+    advertencia "No se ingresaron rutas. Usando lista predeterminada..."
+    DIRECTORIOS=(
+        "/etc"
+        "/usr/bin"
+        "/usr/local/bin"
+        "/var"
+        "/home"
+        "/tmp"
+        "/root"
+        "/opt"
+    )
+else
+    # Convertir la entrada del usuario en un array
+    IFS=' ' read -r -a DIRECTORIOS <<< "$INPUT"
+fi
+
+# Crear o limpiar archivo de salida
+echo "Traza de permisos de directorios/archivos - Timestamp: $(date)" > "$SALIDA"
+echo "===================================================" >> "$SALIDA"
+
+# Recolectar información de permisos
+for RUTA in "${DIRECTORIOS[@]}"; do
+    if [ -e "$RUTA" ]; then
+        echo -e "${COLOR_VERDE}[+] Verificando: $RUTA${COLOR_RESET}"
+        echo "Path del directorio/archivo: $RUTA" >> "$SALIDA"
+        echo "Permisos detallados:" >> "$SALIDA"
+        ls -ld "$RUTA" >> "$SALIDA"
+        echo "Propietario: $(stat -c '%U' "$RUTA")" >> "$SALIDA"
+        echo "Grupo: $(stat -c '%G' "$RUTA")" >> "$SALIDA"
+        echo "Permisos (octal): $(stat -c '%a' "$RUTA")" >> "$SALIDA"
+        echo "" >> "$SALIDA"
+    else
+        error "Path no encontrado: $RUTA"
+        echo "Path no encontrado: $RUTA" >> "$SALIDA"
+        echo "" >> "$SALIDA"
+    fi
+done
+
+# Mostrar mensaje final
+exito "Reporte generado en: $SALIDA"
