@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Comprobar si se ejecuta como root
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Este script debe ejecutarse como root o con sudo."
+    exit 1
+fi
+
+# Función para mostrar mensajes en verde
+function print_green {
+    echo -e "\e[32m$1\e[0m"
+}
+
+# Función para mostrar mensajes en rojo
+function print_red {
+    echo -e "\e[31m$1\e[0m"
+}
+
+# Pedir al usuario el nombre del nuevo usuario
+read -p "Ingrese el nombre del nuevo usuario: " USUARIO
+
+# Verificar si el usuario ya existe
+if id "$USUARIO" &>/dev/null; then
+    print_red "El usuario '$USUARIO' ya existe. Saliendo..."
+    exit 1
+fi
+
+# Pedir información adicional
+read -p "Ingrese el shell predeterminado (por defecto: /bin/bash): " SHELL
+SHELL=${SHELL:-/bin/bash}
+
+read -p "Ingrese el nombre del grupo primario (por defecto: users): " GRUPO
+GRUPO=${GRUPO:-users}
+
+# Crear el grupo si no existe
+if ! grep -q "^$GRUPO:" /etc/group; then
+    print_green "El grupo '$GRUPO' no existe. Creándolo..."
+    groupadd "$GRUPO"
+fi
+
+# Crear el usuario con su directorio home
+useradd -m -s "$SHELL" -g "$GRUPO" "$USUARIO"
+
+# Generar contraseña aleatoria
+PASSWORD=$(openssl rand -base64 12)
+echo "$USUARIO:$PASSWORD" | chpasswd
+
+# Forzar cambio de contraseña al primer inicio
+chage -d 0 "$USUARIO"
+
+# Mostrar resumen
+print_green "Usuario '$USUARIO' creado exitosamente."
+echo "  - Contraseña temporal: $PASSWORD"
+echo "  - Shell: $SHELL"
+echo "  - Grupo primario: $GRUPO"
+echo "El usuario debe cambiar su contraseña al primer inicio de sesión."
+
+# Mostrar las últimas 5 líneas del archivo de usuarios
+echo "Últimos 5 usuarios en /etc/passwd:"
+tail -n 5 /etc/passwd
+
+# Comprobar si el usuario es parte de sudoers
+echo "Verificando si el usuario '$USUARIO' tiene privilegios sudo..."
+if groups "$USUARIO" | grep -q "\bsudo\b"; then
+    print_green "El usuario '$USUARIO' es parte de los sudoers y puede usar sudo."
+else
+    print_red "El usuario '$USUARIO' NO es parte de los sudoers."
+    read -p "¿Desea agregar al usuario '$USUARIO' al grupo sudo? (s/n): " RESPUESTA
+    if [[ "$RESPUESTA" == "s" || "$RESPUESTA" == "S" ]]; then
+        usermod -aG sudo "$USUARIO"
+        print_green "El usuario '$USUARIO' se agregó al grupo sudo."
+
+        # Verificar nuevamente si tiene privilegios sudo
+        echo "Reverificando privilegios sudo..."
+        if groups "$USUARIO" | grep -q "\bsudo\b"; then
+            print_green "El usuario '$USUARIO' ahora es parte de los sudoers y puede usar sudo."
+        else
+            print_red "Hubo un error al agregar el usuario '$USUARIO' al grupo sudo."
+        fi
+    else
+        print_red "El usuario '$USUARIO' no se agregó al grupo sudo."
+    fi
+fi
