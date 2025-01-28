@@ -1,15 +1,16 @@
 #!/bin/bash
 
 # Archivo de salida
-SALIDA="permisos_directorios_personalizados.txt"
+SALIDA="Traza de permisos"
 
 # Pedir al usuario los directorios o archivos a checar
-echo "Ingrese los directorios o archivos que desea verificar, separados por espacios:"
+echo "[+] Porfavor, Ingrese los directorios o archivos que desea verificar, (Seleccion multiple, separados por espacios [+]\n
+>> "
 read -r INPUT
 
 # Usar directorios predeterminados si no se ingresa nada
 if [ -z "$INPUT" ]; then
-    echo "No se ingresaron rutas. Usando lista predeterminada..."
+    echo "[+]No se ingresaron rutas. [+] Usando lista predeterminada..."
     DIRECTORIOS=(
         "/etc"
         "/usr/bin"
@@ -26,17 +27,17 @@ else
 fi
 
 # Crear o limpiar archivo de salida
-echo "Reporte de permisos de directorios/archivos - $(date)" > $SALIDA
+echo "Traza de permisos de directorios/archivos - Timestamp $(date)" > $SALIDA
 echo "===================================================" >> $SALIDA
 
 # Recolectar información de permisos
 for RUTA in "${DIRECTORIOS[@]}"; do
     if [ -e "$RUTA" ]; then
-        echo "Ruta: $RUTA" >> $SALIDA
+        echo "Path del directorio: $RUTA" >> $SALIDA
         ls -ld "$RUTA" >> $SALIDA
         echo "" >> $SALIDA
     else
-        echo "Ruta no encontrada: $RUTA" >> $SALIDA
+        echo "Path no encontrado: $RUTA" >> $SALIDA
         echo "" >> $SALIDA
     fi
 done
