@@ -1,0 +1,55 @@
+#!/bin/bash
+# Colores para la salida
+COLOR_VERDE='\033[0;32m'
+COLOR_ROJO='\033[0;31m'
+COLOR_RESET='\033[0m'
+
+# Función para mostrar mensajes de éxito
+exito() {
+    echo -e "${COLOR_VERDE}[+] $1${COLOR_RESET}"
+}
+
+# Función para mostrar mensajes de error
+error() {
+    echo -e "${COLOR_ROJO}[!] Error: $1${COLOR_RESET}" >&2
+}
+
+# Solicitar información al usuario
+read -p "Ingrese el servidor de origen (usuario@ip_servidor): " SERVER1
+read -p "Ingrese el servidor de destino (usuario@ip_servidor): " SERVER2
+read -p "Ingrese el nombre del archivo de salida: " ARCHIVO_SALIDA
+read -p "Ingrese el comando a ejecutar en el servidor de origen: " COMANDO
+
+# Paso 1: Conectar por SSH al servidor de origen y ejecutar el comando
+echo -e "${COLOR_VERDE}[+] Conectando al servidor de origen ($SERVER1) y ejecutando el comando...${COLOR_RESET}"
+if ssh "$SERVER1" "$COMANDO > $ARCHIVO_SALIDA"; then
+    exito "Comando ejecutado y salida guardada en $ARCHIVO_SALIDA en el servidor de origen."
+else
+    error "No se pudo ejecutar el comando en el servidor de origen."
+    exit 1
+fi
+
+# Paso 2: Transferir el archivo de salida del servidor de origen al servidor de destino usando SCP
+echo -e "${COLOR_VERDE}[+] Transfiriendo el archivo de salida al servidor de destino ($SERVER2)...${COLOR_RESET}"
+if scp "$SERVER1:~/$ARCHIVO_SALIDA" "$SERVER2:~/$ARCHIVO_SALIDA"; then
+    exito "Archivo $ARCHIVO_SALIDA transferido al servidor de destino."
+else
+    error "No se pudo transferir el archivo al servidor de destino."
+    exit 1
+fi
+
+# Paso 3: Verificar que el archivo existe en el servidor de destino
+echo -e "${COLOR_VERDE}[+] Verificando que el archivo existe en el servidor de destino ($SERVER2)...${COLOR_RESET}"
+if ssh "$SERVER2" "test -f ~/$ARCHIVO_SALIDA"; then
+    exito "El archivo $ARCHIVO_SALIDA está en el servidor de destino."
+else
+    error "El archivo $ARCHIVO_SALIDA no se encuentra en el servidor de destino."
+    exit 1
+fi
+
+# Paso 4: Mostrar el contenido del archivo en el servidor de destino
+echo -e "${COLOR_VERDE}[+] Mostrando el contenido del archivo en el servidor de destino ($SERVER2)...${COLOR_RESET}"
+ssh "$SERVER2" "cat ~/$ARCHIVO_SALIDA"
+
+# Mensaje final
+echo -e "${COLOR_VERDE}[+] Laboratorio completado con éxito.${COLOR_RESET}"
