@@ -1,0 +1,27 @@
+Ejemplos en el contexto de Azure DevOps
+
+Código 400 (Bad Request)
+Causa: Una solicitud mal formada a la API de Azure DevOps.
+curl -u "user:token" -X POST https://dev.azure.com/organization/project/_apis/pipelines?api-version=7.1-preview.1 -H "Content-Type: application/json" -d '{"invalid": "data"}'
+
+  Si el JSON no sigue el formato esperado, Azure DevOps devolverá un **400 Bad Request**.
+
+Código 401 (Unauthorized)
+Causa**: Falta de autenticación o token inválido.
+curl https://dev.azure.com/organization/project/_apis/build/builds?api-version=7.1-preview.6
+
+  Si no se proporciona un token de acceso válido, Azure DevOps devolverá un **401 Unauthorized**.
+
+Código 404 (Not Found)
+Causa: El recurso solicitado no existe.
+
+curl -u "user:token" https://dev.azure.com/organization/project/_apis/pipelines/999999?api-version=7.1-preview.1
+
+ Si el pipeline con ID `999999` no existe, Azure DevOps devolverá un **404 Not Found**.
+
+Código 500 (Internal Server Error)
+
+- **Causa**: Un error en el servidor de Azure DevOps.
+ curl -u "user:token" https://dev.azure.com/organization/project/_apis/pipelines?api-version=7.1-preview.1
+
+  Si el servidor falla al procesar la solicitud, devolverá un **500 Internal Server Error**.
