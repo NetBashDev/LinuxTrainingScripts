@@ -58,9 +58,13 @@ ps aux --sort=-%mem | head -n 5
 echo -e "\n${YELLOW}Procesos que consumen más CPU:${NC}"
 ps aux --sort=-%cpu | head -n 5
 
-# 6. Comprobar puertos abiertos
+# 6. Comprobar puertos abiertos (usando ss en lugar de netstat)
 print_section "Puertos abiertos"
-netstat -tuln | grep LISTEN
+echo -e "${YELLOW}Puertos TCP en escucha:${NC}"
+ss -tuln | grep LISTEN
+
+echo -e "\n${YELLOW}Puertos UDP en escucha:${NC}"
+ss -uln
 
 # 7. Mostrar logs recientes del sistema
 print_section "Logs recientes del sistema"
